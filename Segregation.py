@@ -96,11 +96,15 @@ class Schelling:
         else:
             return float(count_similar) / (count_similar + count_different) < color_threshold
     
-    def move_locations(self):
+    def move_locations(self, similarity_threshold=1e-2, consecutive_iterations_threshold=1):
         total_distance = 0
+        prev_similarity = 0.0
+        consecutive_iterations = 0
+
         for i in range(self.n_iterations):
             self.old_agents = copy.deepcopy(self.agents)
             n_changes = 0
+
             for agent in self.old_agents:
                 if self.is_unsatisfied(agent[0], agent[1]):
                     agent_color = self.agents[agent]
@@ -116,9 +120,21 @@ class Schelling:
             print('Iteration: %d, Similarity Percentage: %3.2f%%, Number of changes: %d, total distance: %d' % (
                 i + 1, similarity_percentage, n_changes, total_distance))
 
-            if n_changes == 0:
+            # Stopping condition based on little progress
+            similarity_change = abs(similarity_percentage - prev_similarity)
+            if similarity_change < similarity_threshold:
+                consecutive_iterations += 1
+            else:
+                consecutive_iterations = 0
+
+            if consecutive_iterations >= consecutive_iterations_threshold:
+                print(f'Stopping early. Little progress for {consecutive_iterations_threshold} consecutive iterations.')
                 break
 
+            prev_similarity = similarity_percentage
+
+            if n_changes == 0:
+                break
 
     def plot(self, title, file_name):
         fig, ax = plt.subplots()
@@ -214,6 +230,9 @@ def main():
     schelling_2_with_3_colors = Schelling(50, 50, 0.3, {1: 0.3, 2: 0.5, 3: 0.2}, 200, 3)
     schelling_2_with_3_colors.populate()
     
+    schelling_3_with_3_colors = Schelling(50, 50, 0.3, {1: 0.3, 2: 0.8, 3: 0.4}, 200, 3)
+    schelling_3_with_3_colors.populate()
+    
     schelling_1.plot('Schelling Model with 2 colors: Initial State', 'schelling_2_initial.png')
     schelling_1_with_3_colors.plot('Schelling Model with 3 colors: Initial State', 'schelling_2_color_initial.png')
 
@@ -232,6 +251,8 @@ def main():
                      'schelling_50_final.png')
     schelling_3.plot('Schelling Model with 2 colors: Final State with Happiness Threshold 80%',
                      'schelling_80_final.png')
+    schelling_3_with_3_colors.plot('Schelling Model with 3 colors: Final State with Happiness Threshold 80%',
+                     'schelling_80_color_final.png')
     schelling_0_with_3_colors.plot('Schelling Model with 3 colors: Final State with Happiness Threshold 30%',
                      'schelling_0_30_color_final.png')
     schelling_1_with_3_colors.plot('Schelling Model with 3 colors: Final State with Happiness Threshold 30%',
