@@ -140,12 +140,10 @@ class Schelling:
         for i in range(self.n_iterations):
             self.old_agents = copy.deepcopy(self.agents)
             n_changes = 0
-
             for agent in self.old_agents:
                 swap_attempts = 0
 
                 while swap_attempts < max_swap_attempts and self.is_unsatisfied(agent[0], agent[1]):
-                    print(f'Swap attempts: {swap_attempts}')
                     agent_color = self.agents[agent]
                     empty_house = random.choice(self.empty_houses)
 
@@ -208,54 +206,56 @@ class Schelling:
     def calculate_similarity(self, x, y):
         count_similar = 0
         count_different = 0
-        color = self.agents[(x, y)]
+        color = self.agents.get((x, y))
 
-        for agent_x, agent_y in self.agents:
-            if (agent_x, agent_y) != (x, y):
-                agent_color = self.agents[(agent_x, agent_y)]
-                if (agent_x - 1, agent_y - 1) not in self.empty_houses and self.agents.get((agent_x - 1, agent_y - 1)) == color:
-                    count_similar += 1
-                elif (agent_x - 1, agent_y - 1) not in self.empty_houses and self.agents.get((agent_x - 1, agent_y - 1)) != color:
-                    count_different += 1
-            if y > 0 and (x, y - 1) not in self.empty_houses:
-                if self.agents[(x, y - 1)] == color:
-                    count_similar += 1
-                else:
-                    count_different += 1
-            if x < (self.width - 1) and y > 0 and (x + 1, y - 1) not in self.empty_houses:
-                if self.agents[(x + 1, y - 1)] == color:
-                    count_similar += 1
-                else:
-                    count_different += 1
-            if x > 0 and (x - 1, y) not in self.empty_houses:
-                if self.agents[(x - 1, y)] == color:
-                    count_similar += 1
-                else:
-                    count_different += 1
-            if x < (self.width - 1) and (x + 1, y) not in self.empty_houses:
-                if self.agents[(x + 1, y)] == color:
-                    count_similar += 1
-                else:
-                    count_different += 1
-            if x > 0 and y < (self.height - 1) and (x - 1, y + 1) not in self.empty_houses:
-                if self.agents[(x - 1, y + 1)] == color:
-                    count_similar += 1
-                else:
-                    count_different += 1
-            if x > 0 and y < (self.height - 1) and (x, y + 1) not in self.empty_houses:
-                if self.agents[(x, y + 1)] == color:
-                    count_similar += 1
-                else:
-                    count_different += 1
-            if x < (self.width - 1) and y < (self.height - 1) and (x + 1, y + 1) not in self.empty_houses:
-                if self.agents[(x + 1, y + 1)] == color:
-                    count_similar += 1
-                else:
-                    count_different += 1
-        try:
-            return float(count_similar) / (count_similar + count_different)
-        except ZeroDivisionError:
-            return 1
+        if color is not None:
+            for (agent_x, agent_y), agent_color in self.agents.items():
+                if (agent_x, agent_y) != (x, y):
+                    if (agent_x - 1, agent_y - 1) not in self.empty_houses and self.agents.get((agent_x - 1, agent_y - 1)) == color:
+                        count_similar += 1
+                    elif (agent_x - 1, agent_y - 1) not in self.empty_houses and self.agents.get((agent_x - 1, agent_y - 1)) != color:
+                        count_different += 1
+                if y > 0 and (x, y - 1) not in self.empty_houses:
+                    if self.agents[(x, y - 1)] == color:
+                        count_similar += 1
+                    else:
+                        count_different += 1
+                if x < (self.width - 1) and y > 0 and (x + 1, y - 1) not in self.empty_houses:
+                    if self.agents[(x + 1, y - 1)] == color:
+                        count_similar += 1
+                    else:
+                        count_different += 1
+                if x > 0 and (x - 1, y) not in self.empty_houses:
+                    if self.agents[(x - 1, y)] == color:
+                        count_similar += 1
+                    else:
+                        count_different += 1
+                if x < (self.width - 1) and (x + 1, y) not in self.empty_houses:
+                    if self.agents[(x + 1, y)] == color:
+                        count_similar += 1
+                    else:
+                        count_different += 1
+                if x > 0 and y < (self.height - 1) and (x - 1, y + 1) not in self.empty_houses:
+                    if self.agents[(x - 1, y + 1)] == color:
+                        count_similar += 1
+                    else:
+                        count_different += 1
+                if x > 0 and y < (self.height - 1) and (x, y + 1) not in self.empty_houses:
+                    if self.agents[(x, y + 1)] == color:
+                        count_similar += 1
+                    else:
+                        count_different += 1
+                if x < (self.width - 1) and y < (self.height - 1) and (x + 1, y + 1) not in self.empty_houses:
+                    if self.agents[(x + 1, y + 1)] == color:
+                        count_similar += 1
+                    else:
+                        count_different += 1
+            try:
+                return float(count_similar) / (count_similar + count_different)
+            except ZeroDivisionError:
+                return 1
+        else:
+            return 0
 
 
 def main():
