@@ -108,19 +108,24 @@ class Schelling:
             for agent in self.old_agents:
                 if self.is_unsatisfied(agent[0], agent[1]):
                     agent_color = self.agents[agent]
-                    
-                    # Check if the agent is willing to swap with an open position
+
+                    # Get the neighborhood of the current agent
+                    neighborhood = self.get_neighborhood(agent[0], agent[1])
+
+                    # Check if the agent is willing to swap with an open position in the neighborhood
                     if random.random() < swap_probability:
-                        empty_house = random.choice(self.empty_houses)
-                        self.agents[empty_house] = agent_color
-                        del self.agents[agent]
-                        self.empty_houses.remove(empty_house)
-                        self.empty_houses.append(agent)
-                        total_distance += abs(empty_house[0] - agent[0]) + abs(empty_house[1] - agent[1])
-                        n_changes += 1
+                        empty_houses_in_neighborhood = [pos for pos in neighborhood if pos in self.empty_houses]
+                        if empty_houses_in_neighborhood:
+                            empty_house = random.choice(empty_houses_in_neighborhood)
+                            self.agents[empty_house] = agent_color
+                            del self.agents[agent]
+                            self.empty_houses.remove(empty_house)
+                            self.empty_houses.append(agent)
+                            total_distance += abs(empty_house[0] - agent[0]) + abs(empty_house[1] - agent[1])
+                            n_changes += 1
                     else:
-                        # Find a willing agent to swap with
-                        willing_agents = [a for a in self.old_agents if a != agent and self.is_willing_to_swap(a, agent)]
+                        # Find a willing agent to swap with within the neighborhood
+                        willing_agents = [a for a in self.old_agents if a in neighborhood and a != agent and self.is_willing_to_swap(a, agent)]
                         if willing_agents:
                             willing_agent = random.choice(willing_agents)
                             self.agents[agent], self.agents[willing_agent] = self.agents[willing_agent], self.agents[agent]
@@ -146,6 +151,10 @@ class Schelling:
 
             if n_changes == 0:
                 break
+            
+    def get_neighborhood(self, x, y):
+        neighborhood = [(x + i, y + j) for i in range(-1, 2) for j in range(-1, 2) if 0 <= x + i < self.width and 0 <= y + j < self.height]
+        return neighborhood
     
     def is_willing_to_swap(self, agent1, agent2):
         x1, y1 = agent1
