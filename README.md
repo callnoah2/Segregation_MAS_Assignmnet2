@@ -11,7 +11,7 @@ pip install matplotlib
 
 ## Running the Program
 
-Navigate to /code/Segregation.py and run
+In IDE navigate to /code/Segregation.py and run
 
 __OR__
 
