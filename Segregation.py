@@ -96,7 +96,7 @@ class Schelling:
         else:
             return float(count_similar) / (count_similar + count_different) < color_threshold
     
-    def move_locations(self, similarity_threshold=1e-2, consecutive_iterations_threshold=1):
+    def move_locations(self, similarity_threshold=1e-2, consecutive_iterations_threshold=1, swap_probability=0.5):
         total_distance = 0
         prev_similarity = 0.0
         consecutive_iterations = 0
@@ -108,13 +108,24 @@ class Schelling:
             for agent in self.old_agents:
                 if self.is_unsatisfied(agent[0], agent[1]):
                     agent_color = self.agents[agent]
-                    empty_house = random.choice(self.empty_houses)
-                    self.agents[empty_house] = agent_color
-                    del self.agents[agent]
-                    self.empty_houses.remove(empty_house)
-                    self.empty_houses.append(agent)
-                    total_distance += abs(empty_house[0] - agent[0]) + abs(empty_house[1] - agent[1])
-                    n_changes += 1
+                    
+                    # Check if the agent is willing to swap with an open position
+                    if random.random() < swap_probability:
+                        empty_house = random.choice(self.empty_houses)
+                        self.agents[empty_house] = agent_color
+                        del self.agents[agent]
+                        self.empty_houses.remove(empty_house)
+                        self.empty_houses.append(agent)
+                        total_distance += abs(empty_house[0] - agent[0]) + abs(empty_house[1] - agent[1])
+                        n_changes += 1
+                    else:
+                        # Find a willing agent to swap with
+                        willing_agents = [a for a in self.old_agents if a != agent and self.is_willing_to_swap(a, agent)]
+                        if willing_agents:
+                            willing_agent = random.choice(willing_agents)
+                            self.agents[agent], self.agents[willing_agent] = self.agents[willing_agent], self.agents[agent]
+                            total_distance += abs(willing_agent[0] - agent[0]) + abs(willing_agent[1] - agent[1])
+                            n_changes += 1
 
             similarity_percentage = self.calculate_similarity() * 100
             print('Iteration: %d, Similarity Percentage: %3.2f%%, Number of changes: %d, total distance: %d' % (
@@ -135,7 +146,29 @@ class Schelling:
 
             if n_changes == 0:
                 break
+    
+    def is_willing_to_swap(self, agent1, agent2):
+        x1, y1 = agent1
+        x2, y2 = agent2
 
+        # Check if the coordinates are in the agents dictionary
+        if (x1, y1) not in self.agents or (x2, y2) not in self.agents:
+            return False
+
+        return self.calculate_similarity_for_agent(agent1) < self.calculate_similarity_for_agent(agent2)
+    
+    def calculate_similarity_for_agent(self, agent):
+        # Calculate similarity for a specific agent
+        count_similar = 0
+        count_different = 0
+        x, y = agent
+        color = self.agents[(x, y)]
+
+        try:
+            return float(count_similar) / (count_similar + count_different)
+        except ZeroDivisionError:
+            return 1.0
+    
     def plot(self, title, file_name):
         fig, ax = plt.subplots()
         # If you want to run the simulation with more than 7 colors, you should set agent_colors accordingly
